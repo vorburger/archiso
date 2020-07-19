@@ -2,8 +2,6 @@
 
 default:
   image: archlinux/base
-  tags:
-    - secure
 
 lint:
   stage: build
@@ -17,4 +15,7 @@ build_images:
   before_script:
     - pacman --noconfirm -Syu --needed base-devel edk2-ovmf libvirt qemu ruby-bundler vagrant
     - vagrant plugin install vagrant-libvirt
-  script: vagrant up --provider=libvirt
+  script:
+    - vagrant up --provider=libvirt
+  tags:
+    - secure
