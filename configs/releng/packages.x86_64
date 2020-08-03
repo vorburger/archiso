@@ -1,6 +1,9 @@
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 amd-ucode
 arch-install-scripts
 b43-fwcutter
+base
 bind-tools
 broadcom-wl
 btrfs-progs
@@ -14,6 +17,7 @@ diffutils
 dmraid
 dnsmasq
 dosfstools
+edk2-shell
 efibootmgr
 ethtool
 exfat-utils
@@ -45,6 +49,7 @@ mc
 mdadm
 memtest86+
 mkinitcpio
+mkinitcpio-archiso
 mkinitcpio-nfs-utils
 mtools
 nano
@@ -72,6 +77,7 @@ sdparm
 sg3_utils
 smartmontools
 sudo
+syslinux
 systemd-resolvconf
 tcpdump
 terminus-font

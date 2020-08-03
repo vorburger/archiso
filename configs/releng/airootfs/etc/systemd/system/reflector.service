@@ -1,3 +1,6 @@
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 [Unit]
 Description=pacman mirrorlist update
 Wants=network-online.target
@@ -6,7 +9,7 @@ ConditionKernelCommandLine=!mirror
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/reflector --protocol https --age 1 --sort rate --save /etc/pacman.d/mirrorlist
+ExecStart=/usr/bin/reflector --protocol https --latest 70 --sort rate --save /etc/pacman.d/mirrorlist
 Restart=on-failure
 RestartSec=10
 CacheDirectory=reflector

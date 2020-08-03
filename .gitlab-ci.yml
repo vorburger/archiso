@@ -1,4 +1,6 @@
 ---
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 default:
   image: "archlinux:latest"
@@ -8,7 +10,7 @@ lint:
   before_script:
     - pacman --noconfirm -Syu --needed base-devel shellcheck
   script:
-    - make check
+    - make lint
 
 build_images:
   stage: build

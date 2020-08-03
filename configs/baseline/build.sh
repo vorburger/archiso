@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 set -e -u
 
@@ -22,27 +24,51 @@ run_once() {
     fi
 }
 
-# Base installation (airootfs)
-make_basefs() {
-    mkarchiso -v -w "${work_dir}" -D "${install_dir}" init
+# Setup custom pacman.conf with current cache directories.
+make_pacman_conf() {
+    local _cache_dirs
+    _cache_dirs=("$(pacman -v 2>&1 | grep '^Cache Dirs:' | sed 's/Cache Dirs:\s*//g')")
+    sed -r "s|^#?\\s*CacheDir.+|CacheDir = $(echo -n "${_cache_dirs[@]}")|g" \
+        "${script_path}/pacman.conf" > "${work_dir}/pacman.conf"
 }
 
-# Copy mkinitcpio archiso hooks and build initramfs (airootfs)
-make_setup_mkinitcpio() {
-    mkdir -p "${work_dir}/airootfs/etc/initcpio/hooks"
-    mkdir -p "${work_dir}/airootfs/etc/initcpio/install"
-    cp /usr/lib/initcpio/hooks/archiso "${work_dir}/airootfs/etc/initcpio/hooks"
-    cp /usr/lib/initcpio/install/archiso "${work_dir}/airootfs/etc/initcpio/install"
-    cp "${script_path}/mkinitcpio.conf" "${work_dir}/airootfs/etc/mkinitcpio-archiso.conf"
-    mkarchiso -v -w "${work_dir}" -D "${install_dir}" \
-        -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux -g /boot/archiso.img' run
+# Prepare working directory and copy custom airootfs files (airootfs)
+make_custom_airootfs() {
+    local _airootfs="${work_dir}/airootfs"
+    mkdir -p -- "${_airootfs}"
+
+    if [[ -d  "${script_path}/airootfs" ]]; then
+        cp -af --no-preserve=ownership -- "${script_path}/airootfs/." "${_airootfs}"
+        [[ -e "${_airootfs}/etc/shadow" ]] && chmod -f 0400 -- "${_airootfs}/etc/shadow"
+        [[ -e "${_airootfs}/etc/gshadow" ]] && chmod -f 0400 -- "${_airootfs}/etc/gshadow"
+
+        # Set up user home directories and permissions
+        if [[ -e "${_airootfs}/etc/passwd" ]]; then
+            while IFS=':' read -a passwd -r; do
+                [[ "${passwd[5]}" == '/' ]] && continue
+
+                if [[ -d "${_airootfs}${passwd[5]}" ]]; then
+                    chown -hR -- "${passwd[2]}:${passwd[3]}" "${_airootfs}${passwd[5]}"
+                    chmod -f 0750 -- "${_airootfs}${passwd[5]}"
+                else
+                    install -d -m 0750 -o "${passwd[2]}" -g "${passwd[3]}" -- "${_airootfs}${passwd[5]}"
+                fi
+             done < "${_airootfs}/etc/passwd"
+        fi
+    fi
+}
+
+# Packages (airootfs)
+make_packages() {
+    mkarchiso -v -w "${work_dir}" -C "${work_dir}/pacman.conf" -D "${install_dir}" \
+        -p "$(grep -h -v '^#' "${script_path}/packages.x86_64"| sed ':a;N;$!ba;s/\n/ /g')" install
 }
 
 # Prepare ${install_dir}/boot/
 make_boot() {
     mkdir -p "${work_dir}/iso/${install_dir}/boot/${arch}"
     cp "${work_dir}/airootfs/boot/archiso.img" "${work_dir}/iso/${install_dir}/boot/${arch}/archiso.img"
-    cp "${work_dir}/airootfs/boot/vmlinuz-linux" "${work_dir}/iso/${install_dir}/boot/${arch}/vmlinuz"
+    cp "${work_dir}/airootfs/boot/vmlinuz-linux" "${work_dir}/iso/${install_dir}/boot/${arch}/"
 }
 
 # Prepare /${install_dir}/boot/syslinux
@@ -78,8 +104,9 @@ make_iso() {
         "${iso_name}-${iso_version}-${arch}.iso"
 }
 
-run_once make_basefs
-run_once make_setup_mkinitcpio
+run_once make_custom_airootfs
+run_once make_pacman_conf
+run_once make_packages
 run_once make_boot
 run_once make_syslinux
 run_once make_isolinux
