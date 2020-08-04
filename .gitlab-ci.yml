@@ -16,10 +16,11 @@ build_images:
   stage: build
   before_script:
     - pacman --noconfirm -Syu --needed base-devel edk2-ovmf libvirt qemu ruby-bundler vagrant
+    - pacman -Ss systemd
     - vagrant plugin install vagrant-libvirt
     - mkdir -vp /etc/systemd/system/multi-user.target.wants/
     - ln -svf /usr/lib/systemd/system/libvirtd.service /etc/systemd/system/multi-user.target.wants/libvirtd.service
-    - /usr/bin/init
+    - /sbin/init
   script:
     - vagrant up --provider=libvirt
   tags:
