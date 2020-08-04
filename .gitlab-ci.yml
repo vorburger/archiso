@@ -12,20 +12,14 @@ lint:
   script:
     - make lint
 
-test_build:
-  stage: build
-  before_script:
-    - pacman --noconfirm -Syu --needed arch-install-scripts base-devel bash dosfstools e2fsprogs edk2-ovmf libisoburn squashfs-tools
-    - make install
-  script:
-    - /usr/share/archiso/configs/releng/build.sh -w /tmp/work -o /tmp/out -v
-
 build_images:
   stage: build
   before_script:
     - pacman --noconfirm -Syu --needed base-devel edk2-ovmf libvirt qemu ruby-bundler vagrant
     - vagrant plugin install vagrant-libvirt
-    - systemctl start libvirtd
+    - mkdir -vp /etc/systemd/system/multi-user.target.wants/
+    - ln -svf /usr/lib/systemd/system/libvirtd.service /etc/systemd/system/multi-user.target.wants/libvirtd.service
+    - /usr/bin/init
   script:
     - vagrant up --provider=libvirt
   tags:
