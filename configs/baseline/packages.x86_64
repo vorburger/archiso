@@ -5,3 +5,4 @@ linux
 mkinitcpio
 mkinitcpio-archiso
 syslinux
+openssh
