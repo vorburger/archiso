@@ -6,3 +6,4 @@ mkinitcpio
 mkinitcpio-archiso
 syslinux
 openssh
+cloud-init
