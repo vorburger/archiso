@@ -29,6 +29,7 @@ Options:
     -s              use Secure Boot (only relevant when using UEFI)
     -u              set boot type to 'UEFI'
     -v              use VNC display (instead of default SDL)
+    -c              add cloudinit.iso as CD-ROM 2nd drive
 
 Example:
     Run an image using UEFI:
@@ -93,7 +94,7 @@ run_image() {
         -device virtio-scsi-pci,id=scsi0 \
         -device "scsi-${mediatype%rom},bus=scsi0.0,drive=${mediatype}0" \
         -drive "id=${mediatype}0,if=none,format=raw,media=${mediatype/hd/disk},readonly=on,file=${image}" \
-        -display ${display} \
+        -display "${display}" \
         -vga virtio \
         -audiodev pa,id=snd0 \
         -device ich9-intel-hda \
@@ -130,13 +131,16 @@ working_dir="$(mktemp -dt run_archiso.XXXXXXXXXX)"
 trap cleanup_working_dir EXIT
 
 if (( ${#@} > 0 )); then
-    while getopts 'abdhi:suv' flag; do
+    while getopts 'abcdhi:suv' flag; do
         case "$flag" in
             a)
                 accessibility='on'
                 ;;
             b)
                 boot_type='bios'
+                ;;
+            c)
+                qemu_options+=('-cdrom' 'cloudinit.iso')
                 ;;
             d)
                 mediatype='hd'
