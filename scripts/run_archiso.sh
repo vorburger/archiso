@@ -103,11 +103,8 @@ run_image() {
         -drive "id=${mediatype}0,if=none,format=raw,media=${mediatype/hd/disk},readonly=on,file=${image}" \
         -display "${display}" \
         -vga virtio \
-        -audiodev pa,id=snd0 \
         -device ich9-intel-hda \
-        -device hda-output,audiodev=snd0 \
         -device virtio-net-pci,romfile=,netdev=net0 -netdev user,id=net0,hostfwd=tcp::60022-:22 \
-        -machine type=q35,smm=on,accel=kvm,usb=on,pcspk-audiodev=snd0 \
         -global ICH9-LPC.disable_s3=1 \
         -enable-kvm \
         "${qemu_options[@]}" \
